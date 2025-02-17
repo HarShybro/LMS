@@ -10,6 +10,8 @@ import { Text, View } from "react-native";
 import OnBroadingScreen from "@/screens/onBroading/onBroading.screen";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import Toast from "react-native-toast-message";
+import TabLayout from "./(tabs)/_layout";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -42,22 +44,25 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   return (
-    <>
+    <View className="flex-1">
       {isLoggedIn ? (
-        <View></View>
+        <TabLayout />
       ) : (
-        <Stack
-          screenOptions={{ headerShown: false }}
-          initialRouteName="(routes)/login/index"
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(routes)/welcome-intro/index" />
-          <Stack.Screen name="(routes)/login/index" />
-          <Stack.Screen name="(routes)/sign-up/index" />
-          <Stack.Screen name="(routes)/forgot-password/index" />
-          <Stack.Screen name="(routes)/verifyAccount/index" />
-        </Stack>
+        <View className="flex-1">
+          <Stack
+            screenOptions={{ headerShown: false }}
+            initialRouteName="(routes)/login/index"
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(routes)/welcome-intro/index" />
+            <Stack.Screen name="(routes)/login/index" />
+            <Stack.Screen name="(routes)/sign-up/index" />
+            <Stack.Screen name="(routes)/forgot-password/index" />
+            <Stack.Screen name="(routes)/verifyAccount/index" />
+          </Stack>
+          <Toast />
+        </View>
       )}
-    </>
+    </View>
   );
 }

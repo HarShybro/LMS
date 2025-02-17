@@ -4,23 +4,32 @@ import { catchAsyncError } from "./catchAsyncError";
 import ErrorHandler from "../utils/ErrorHandler";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { redis } from "../utils/redis";
+import { updateAccessToken } from "../controllers/user.controller";
 
 export const isAuthenicated = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log("Cookies:", req.cookies);
-    const access_token = req.cookies.access_token;
-    console.log("ACCESS_TOKEN", access_token);
+    const access_token = req.headers["access-token"] as string;
+
+    console.log("ACCESS_TOKEN:-----", access_token);
+
     if (!access_token) {
       return next(new ErrorHandler("User is not Authenicated", 400));
     }
 
-    const decoded = jwt.verify(
-      access_token,
-      process.env.ACCESS_TOKEN as string
-    ) as JwtPayload;
-
+    const decoded = jwt.decode(access_token) as JwtPayload;
+    console.log("Decoded:>>>>>>>   ", decoded);
     if (!decoded) {
       return next(new ErrorHandler("access token is not valid", 400));
+    }
+
+    if (decoded.exp && decoded.exp <= Date.now() / 1000) {
+      try {
+        console.log("Wokring ..... Refresh token");
+        updateAccessToken(req, res, next);
+      } catch (error) {
+        console.log("Not working ..... Refresh token");
+        return next(error);
+      }
     }
 
     const user = await redis.get(decoded._id);

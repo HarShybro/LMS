@@ -29,6 +29,10 @@ import {
 } from "react-native-responsive-screen";
 import { Entypo, FontAwesome, Fontisto, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import axios from "axios";
+import { URI_SERVER } from "@/utils/uri";
+import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
@@ -64,8 +68,41 @@ export default function LoginScreen() {
     }
   };
 
-  const handleSignIn = () => {
-    router.push("/(routes)/verifyAccount");
+  const handleSignIn = async () => {
+    setButtonSpinner(true);
+    await axios
+      .post(`${URI_SERVER}/login`, {
+        email: userInfo.email,
+        password: userInfo.password,
+      })
+      .then(async (res) => {
+        setButtonSpinner(false);
+        setUserInfo({
+          email: "",
+          password: "",
+        });
+
+        await AsyncStorage.setItem("access_token", res.data.accessToken);
+        await AsyncStorage.setItem("refresh_token", res.data.refreshToken);
+        router.push("/(tabs)/home");
+
+        Toast.show({
+          type: "success",
+          text1: "Login Successfully",
+          position: "bottom",
+          visibilityTime: 4000,
+        });
+      })
+      .catch((error) => {
+        setButtonSpinner(false);
+        console.log(error);
+        Toast.show({
+          type: "error",
+          text1: "Invalid email or password",
+          position: "bottom",
+          visibilityTime: 4000,
+        });
+      });
   };
 
   const [fontsload, fontError] = useFonts({

@@ -42,7 +42,7 @@ app.use(
   layoutRouter
 );
 
-app.get("/", (req: Request, res: Response, next: NextFunction) => {
+app.get("/api/v1/call", (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json({
     sucess: true,
     message: "API is working",

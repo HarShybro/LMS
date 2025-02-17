@@ -4,6 +4,7 @@ import {
   TextInput,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import React, { useRef, useState } from "react";
 import { styled } from "nativewind";
@@ -18,11 +19,16 @@ import {
   Nunito_700Bold,
   Nunito_600SemiBold,
 } from "@expo-google-fonts/nunito";
-import { useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { URI_SERVER } from "@/utils/uri";
+import Toast from "react-native-toast-message";
 
 export default function VerifyAccountScreen() {
   const { goBack } = useNavigation();
   const [code, setCode] = useState(new Array(4).fill(""));
+  const [buttonSpinner, setButtonSpinner] = useState(false);
 
   const input = useRef<any>([...Array(4)].map(() => React.createRef()));
 
@@ -63,6 +69,42 @@ export default function VerifyAccountScreen() {
   const Container = styled(View, "flex-1 items-center justify-center px-3");
   const { width } = Dimensions.get("screen");
 
+  async function handleSubmit() {
+    setButtonSpinner(true);
+    const otp = code.join("");
+
+    const activation_token = await AsyncStorage.getItem("Activation_token");
+
+    await axios
+      .post(`${URI_SERVER}/activation-user`, {
+        activation_token,
+        activation_code: otp,
+      })
+      .then((res) => {
+        setButtonSpinner(false);
+        setCode(new Array(4).fill(""));
+        Toast.show({
+          type: "success",
+          text1: res.data.success,
+          text2: "Your Account is created Successfully",
+          position: "bottom",
+          visibilityTime: 4000,
+        });
+        console.log(res.data);
+        router.push("/(routes)/login");
+      })
+      .catch((err) => {
+        setButtonSpinner(false);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Your otp is invalid or expired!! (Retry)",
+          position: "bottom",
+          visibilityTime: 4000,
+        });
+      });
+  }
+
   return (
     <Container style={{ gap: 10 }}>
       <Text
@@ -98,13 +140,18 @@ export default function VerifyAccountScreen() {
         <TouchableOpacity
           className="bg-blue-500 mt-4 rounded"
           style={{ width: width * 1 - 150 }}
+          onPress={handleSubmit}
         >
-          <Text
-            className="text-white py-2 text-center text-xl"
-            style={{ fontFamily: "Nunito_700Bold" }}
-          >
-            Submit
-          </Text>
+          {buttonSpinner ? (
+            <ActivityIndicator size={"small"} color={"white"} />
+          ) : (
+            <Text
+              className="text-white py-2 text-center text-xl"
+              style={{ fontFamily: "Nunito_700Bold" }}
+            >
+              Submit
+            </Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity onPress={() => goBack()}>
           <Text
@@ -115,7 +162,6 @@ export default function VerifyAccountScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-
     </Container>
   );
 }

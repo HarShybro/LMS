@@ -12,6 +12,11 @@ export const getUserById = async (id: string, res: Response) => {
       user,
     });
   }
+
+  return res.status(404).json({
+    success: false,
+    message: "User not found",
+  });
 };
 
 export const getAllUsersService = async (res: Response) => {
